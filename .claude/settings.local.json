@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p simulation src)",
+      "Bash(mv generate_data.m impact_equation_of_motion_hetero.m impact_force.m main_disorder.m main_disorder_v2.m simulation/)"
+    ]
+  }
+}
