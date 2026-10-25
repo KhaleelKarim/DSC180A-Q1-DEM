@@ -1,0 +1,13 @@
+# Conda environment for the project.
+#   Create once:   mamba env create -f environment.yml   (installs to ~/.conda/envs/dem)
+#   Each login:    conda activate dem
+name: dem
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - pandas
+  - pytest
+  - octave

@@ -1,0 +1,5 @@
+# Octave worker shards, inputs and logs (merged output lands in data/raw/)
+data/raw/*_work/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
