@@ -51,7 +51,7 @@ if ~isfile(out_file)
     fclose(fid);
 end
 
-row_format = [repmat('%.6f,', 1, 8), '%.10f\n'];   % 8 inputs, then the ratio
+row_format = [repmat('%.17g,', 1, 8), '%.17g\n'];   % 8 inputs, then the ratio
 total_tic = tic;
 
 % ---- Main loop: one simulated design per iteration ----
@@ -75,7 +75,7 @@ for k = 1:n_samples
     fprintf(fid, row_format, [c2; c3; ratio]);
     fclose(fid);
 
-    fprintf('[%d/%d]  KE ratio = %.4f   (%.1f s)\n', k, n_samples, ratio, run_time);
+    fprintf('[%d/%d]  KE ratio = %.17g   (%.1f s)\n', k, n_samples, ratio, run_time);
 end
 
 fprintf('Done: %d designs in %.1f s. Saved to %s\n', ...
