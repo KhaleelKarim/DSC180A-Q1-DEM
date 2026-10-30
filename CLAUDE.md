@@ -12,7 +12,7 @@
 
 ## Project goal
 
-1. **Replicate** a result from the paper *Disorder DEM* (referred to as "Tamur's paper"; files `Disorder_DEM_Paper_Main.pdf` and `Disorder_DEM_Paper_SI.pdf`, the SI being the supplementary information).
+1. **Replicate** a result from the paper *Disorder DEM* (referred to as "Tamur's paper"; PDFs `Disorder_DEM_Paper_Main.pdf` and `Disorder_DEM_Paper_SI.pdf`, the SI being the supplementary information). **Markdown versions are in `references/Disorder_DEM_Paper_Main.md` and `references/Disorder_DEM_Paper_SI.md`** — prefer these when reading the paper programmatically, as they are easier to parse than the PDFs.
 2. Use the simulation to **generate a dataset**.
 3. **Go a step further** with a novel data-science proposal. This is not yet defined; likely directions include surrogate modeling or ML-based design.
 
@@ -97,11 +97,12 @@ Raise these with the user or their professor rather than silently "fixing" them.
 7. **Stale comments.** The comment in the main files mentions 5 families ("EEEEE") but there are 4. The header comment of `impact_force.m` lists inputs that don't exist. Both are harmless.
 8. **Unused variables.** `displacement_x_*` is computed but unused. Its indexing skips the impactor, giving 20 columns versus 21 for velocity. It's fine for the KE ratio and useful for plotting.
 
-## Status at handoff (2026-10-20)
+## Status at handoff (2026-10-29)
 
 **Done:**
 - The user understands the files at a high level.
 - `generate_data.m` is written.
+- Markdown versions of Tamur's paper and its SI added to `references/` (`Disorder_DEM_Paper_Main.md`, `Disorder_DEM_Paper_SI.md`). Use these as the primary source when referencing the paper's equations, figures, or methods — they are easier to read programmatically than the PDFs.
 
 **Next steps:**
 1. **Sanity check.** Run `main_disorder_v2([-70; -100; -5; -35], [1200; 2000; 1500; 3000])` to confirm the setup works and to get a timing for one design. If possible, compare the result against a value in the paper.
