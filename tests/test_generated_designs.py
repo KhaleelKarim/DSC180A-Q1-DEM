@@ -1,7 +1,8 @@
 """
-Check CSVs produced by simulation/generate_data.m contain only valid designs.
+Check generated data CSVs (MATLAB or Python) contain only valid designs.
 
-Every file matching data/raw/valid_*.csv is checked. Run from the project root:
+Every data/raw/ file matching valid_*.csv, python_*.csv or matlab_*.csv is
+checked. Run from the project root:
     pytest tests/test_generated_designs.py -s
 (-s shows the spring-category breakdown printed for each file.)
 """
@@ -13,13 +14,15 @@ import pandas as pd
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FILES = sorted((PROJECT_ROOT / "data" / "raw").glob("valid_*.csv"))
+RAW_DIR = PROJECT_ROOT / "data" / "raw"
+FILES = sorted(p for pattern in ("valid_*.csv", "python_*.csv", "matlab_*.csv")
+               for p in RAW_DIR.glob(pattern))
 
 C2_COLS = ["c2_A", "c2_B", "c2_C", "c2_D"]
 C3_COLS = ["c3_A", "c3_B", "c3_C", "c3_D"]
 COLUMNS = C2_COLS + C3_COLS + ["KE_ratio"]
 
-pytestmark = pytest.mark.skipif(not FILES, reason="no data/raw/valid_*.csv files yet")
+pytestmark = pytest.mark.skipif(not FILES, reason="no generated data files in data/raw yet")
 
 
 def load(path):

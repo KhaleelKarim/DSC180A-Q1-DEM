@@ -1,0 +1,25 @@
+{
+  "batches": [
+    {
+      "lang": "python",
+      "started": "2026-10-30T21:11:55",
+      "finished": "2026-10-30T21:12:16",
+      "git_commit": "0b13871+uncommitted-changes",
+      "seed": null,
+      "designs_file": "data/raw/matlab_uniform_5000.csv",
+      "designs_sha256": "396c2faaf1afbd4fbfe11945ce363da86d5000b9183c2b8ca0cd5e0532da45f1",
+      "n": 5000,
+      "workers": 8,
+      "solver": "numba",
+      "versions": {
+        "python": "3.11.9",
+        "numpy": "1.26.4",
+        "scipy": "1.13.0",
+        "numba": "0.60.0",
+        "pandas": "2.2.2"
+      },
+      "n_failed": 0,
+      "mean_runtime_s": 0.033796250510960815
+    }
+  ]
+}
