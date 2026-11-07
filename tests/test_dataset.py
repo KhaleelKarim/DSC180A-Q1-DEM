@@ -49,8 +49,8 @@ def test_designs_not_allowed_with_matlab():
 
 
 def test_default_out_names():
-    assert ds.default_out("python", 3) == ds.RAW_DIR / "python_seed3.csv"
-    assert ds.default_out("matlab", 0) == ds.RAW_DIR / "matlab_seed0.csv"
+    assert ds.default_out("python", 3, n_samples=500) == ds.RAW_DIR / "python_seed3_n500.csv"
+    assert ds.default_out("matlab", 0, n_samples=10) == ds.RAW_DIR / "matlab_seed0_n10.csv"
     assert ds.default_out("python", 0, "data/raw/matlab_uniform_5000.csv") == \
         ds.RAW_DIR / "python_matlab_uniform_5000.csv"
 
