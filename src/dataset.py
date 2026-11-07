@@ -2,8 +2,8 @@
 dataset.py -- Generate KE-ratio data with the Python (default) or MATLAB simulation.
 
 Run from anywhere:
-    python src/dataset.py 1000                     # Python, seed 0 -> data/raw/python_seed0.csv
-    python src/dataset.py 1000 --seed 3            # -> data/raw/python_seed3.csv
+    python src/dataset.py 1000                     # Python, seed 0 -> data/raw/python_seed0_n1000.csv
+    python src/dataset.py 1000 --seed 3            # -> data/raw/python_seed3_n1000.csv
     python src/dataset.py 100 --lang matlab --seed 2 --out data/raw/batch.csv
     python src/dataset.py --designs data/raw/matlab_uniform_5000.csv   # re-run given designs (Python only)
 
@@ -46,9 +46,9 @@ C2_COLS, C3_COLS = COLUMNS[:4], COLUMNS[4:8]
 # Small helpers
 # ---------------------------------------------------------------------------
 
-def default_out(lang, seed, designs_file=None):
-    """data/raw/<lang>_seed<seed>.csv, or data/raw/<lang>_<designs stem>.csv with --designs."""
-    tag = Path(designs_file).stem if designs_file else f"seed{seed}"
+def default_out(lang, seed, designs_file=None, n_samples=None):
+    """data/raw/<lang>_seed<seed>_n<n_samples>.csv, or data/raw/<lang>_<designs stem>.csv with --designs."""
+    tag = Path(designs_file).stem if designs_file else f"seed{seed}_n{n_samples}"
     return RAW_DIR / f"{lang}_{tag}.csv"
 
 
@@ -186,7 +186,7 @@ def parse_args(argv=None):
     p.add_argument("--seed", type=int, default=0,
                    help="Random seed (default: 0). Seeds are language-specific.")
     p.add_argument("--out", metavar="FILE",
-                   help="CSV to write/append to (default: data/raw/<lang>_seed<seed>.csv)")
+                   help="CSV to write/append to (default: data/raw/<lang>_seed<seed>_n<N>.csv)")
     p.add_argument("--workers", type=int, default=None,
                    help="Parallel worker processes for --lang python (default: CPUs available)")
     p.add_argument("--designs", metavar="FILE",
@@ -204,33 +204,35 @@ def parse_args(argv=None):
     return args
 
 
-def main(argv=None):
-    args = parse_args(argv)
-    if args.workers is not None and args.lang == "matlab":
-        print("Note: --workers is ignored for --lang matlab.", file=sys.stderr)
-    workers = args.workers or default_workers()
+def generate(n_samples=None, seed=0, out=None, lang="python", workers=None, designs=None, force=False):
+    """Simulate designs and append them to a CSV (plus its .meta.json sidecar).
 
-    out_file = Path(args.out).resolve() if args.out else default_out(args.lang, args.seed, args.designs)
+    Same options as the command line; see parse_args. Returns the output path."""
+    if workers is not None and lang == "matlab":
+        print("Note: --workers is ignored for --lang matlab.", file=sys.stderr)
+    workers = workers or default_workers()
+
+    out_file = Path(out).resolve() if out else default_out(lang, seed, designs, n_samples)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    batch = {"lang": args.lang, "started": datetime.now().isoformat(timespec="seconds"),
+    batch = {"lang": lang, "started": datetime.now().isoformat(timespec="seconds"),
              "finished": None, "git_commit": git_commit()}
     first_design = None
-    if args.designs:
-        c2, c3 = load_designs(args.designs, args.n_samples)
-        batch.update(seed=None, designs_file=str(args.designs), designs_sha256=file_sha256(args.designs))
+    if designs:
+        c2, c3 = load_designs(designs, n_samples)
+        batch.update(seed=None, designs_file=str(designs), designs_sha256=file_sha256(designs))
     else:
-        batch.update(seed=args.seed, designs_file=None, designs_sha256=None)
-        if args.lang == "python":
-            c2, c3 = sample_designs(args.n_samples, args.seed)
+        batch.update(seed=seed, designs_file=None, designs_sha256=None)
+        if lang == "python":
+            c2, c3 = sample_designs(n_samples, seed)
             first_design = (c2[0], c3[0])
-    n = args.n_samples if args.lang == "matlab" else len(c2)
-    batch.update(n=n, workers=workers if args.lang == "python" else 1,
-                 solver="numba" if args.lang == "python" else "ode45",
-                 versions=library_versions() if args.lang == "python" else {"matlab": "see MATLAB install"})
+    n = n_samples if lang == "matlab" else len(c2)
+    batch.update(n=n, workers=workers if lang == "python" else 1,
+                 solver="numba" if lang == "python" else "ode45",
+                 versions=library_versions() if lang == "python" else {"matlab": "see MATLAB install"})
 
     duplicate = find_duplicate(out_file, batch, first_design)
-    if duplicate and not args.force:
+    if duplicate and not force:
         raise SystemExit(f"Refusing to append to {out_file}: {duplicate}.\n"
                          f"Use a different --seed or --out, or pass --force to append anyway.")
 
@@ -239,15 +241,20 @@ def main(argv=None):
     meta["batches"].append(batch)
     write_meta(out_file, meta)
 
-    print(f"Simulating {n} designs with {args.lang} -> {out_file}")
-    if args.lang == "matlab":
-        result = run_matlab(n, out_file, args.seed)
+    print(f"Simulating {n} designs with {lang} -> {out_file}")
+    if lang == "matlab":
+        result = run_matlab(n, out_file, seed)
     else:
         result = run_python(c2, c3, out_file, workers)
 
     batch.update(finished=datetime.now().isoformat(timespec="seconds"),
                  n_failed=result["n_failed"], mean_runtime_s=result["mean_runtime_s"])
     write_meta(out_file, meta)
+    return out_file
+
+
+def main(argv=None):
+    generate(**vars(parse_args(argv)))
 
 
 if __name__ == "__main__":

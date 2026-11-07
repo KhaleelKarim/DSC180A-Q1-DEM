@@ -94,7 +94,7 @@ The first four were provided by the professor. **Do not modify those four origin
 ### `src/dataset.py` (entry point)
 
 `python src/dataset.py N [--lang python|matlab] [--seed S] [--out FILE] [--workers K] [--designs FILE] [--force]`
-- Default `--lang python`; default output `data/raw/<lang>_seed<seed>.csv` (with `--designs`: `data/raw/<lang>_<designs stem>.csv`).
+- Default `--lang python`; default output `data/raw/<lang>_seed<seed>_n<N>.csv` (with `--designs`: `data/raw/<lang>_<designs stem>.csv`).
 - Workers default to `KUBERNETES_LIMIT_CPU` (DSMLP pod = 8 CPUs, 16 GB; `os.cpu_count()` wrongly reports 256).
 - `--designs FILE` (python only) re-runs exact designs from any CSV with `c2_A..c3_D` columns.
 - Writes a sidecar `<out>.meta.json` (one entry per batch: lang, seed/designs hash, n, git commit, versions, timing) and refuses to re-run the same lang+seed or designs file into the same CSV unless `--force`.
