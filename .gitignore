@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+.venv/
+*.py[cod]
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# MATLAB
+*.asv
+*.m~
+*.mex*
+slprj/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Data
+data/raw/*
