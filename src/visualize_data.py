@@ -45,9 +45,8 @@ n = len(clean)
 logke = np.log10(clean["KE_ratio"].to_numpy())
 # Use every row for descriptive statistics. Large scatter plots are sampled
 # deterministically to keep PNG sizes reasonable for 360,000 designs.
-scatter_n = n
-plot_df = clean
-plot_logke = logke
+scatter_n = min(n, 20000)
+plot_df = clean.sample(n=scatter_n, random_state=84) if n > scatter_n else clean
 plot_logke = np.log10(plot_df["KE_ratio"].to_numpy())
 
 # Bounds are per family, not just global min/max.
@@ -95,7 +94,7 @@ for ax in axes[:, 0]:
 
 fig.suptitle(
     f"Parameter vs. KE Ratio scatter plots (n={n:,})\n"
-    f"All {n:,} valid designs; other seven coefficients vary",
+    f"Observational sample: {scatter_n:,} of {n:,} designs; other seven coefficients vary",
     y=1.02
 )
 fig.tight_layout()
@@ -180,7 +179,7 @@ cbar_ax = fig.add_axes([0.84, 0.23, 0.025, 0.52])
 cbar = fig.colorbar(sc, cax=cbar_ax)
 cbar.set_label("log10(KE ratio)")
 fig.suptitle(
-    f"Coefficient space (all {n:,} valid designs) vs energy boundary",
+    f"Coefficient space ({scatter_n:,} displayed of {n:,}) vs energy boundary",
     fontsize=15,
     y=0.97
 )
@@ -390,7 +389,7 @@ summary = [f"Dataset: {csv_path.name}", f"Total designs: {len(df):,}",
            f"KE < 0.03: {counts[0]:,}",
            f"KE < 0.1: {counts[0]+counts[1]:,}",
            f"KE < 1: {counts[0]+counts[1]+counts[2]:,}",
-           f"Visualization scatter points: {scatter_n:,} (all valid designs; no sampling)",
+           f"Visualization scatter sample size: {scatter_n:,}",
            "Scatter plots are observational, not controlled sensitivity analyses."]
 (out_dir / "dataset_summary.txt").write_text("\n".join(summary) + "\n")
 print(f"Saved visualizations and summary in: {out_dir}")
