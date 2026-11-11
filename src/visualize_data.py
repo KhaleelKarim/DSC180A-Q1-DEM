@@ -214,72 +214,15 @@ axes[8].set_title("log10(KE_ratio)")
 axes[8].set_xlabel("log10(KE_ratio)")
 axes[8].set_ylabel("Count")
 
-    fig.suptitle(f"Preliminary dataset visualization (n={n:,})", y=0.98)
-    fig.tight_layout()
-    fig.savefig(out_dir / "00_preliminary_dataset_overview.png", dpi=250, bbox_inches="tight")
-    plt.close(fig)
-    # Most promising designs: top 1% by KE (full dataset).
-    threshold = clean["KE_ratio"].quantile(0.01)
-    best = clean.loc[clean["KE_ratio"] <= threshold]
-    fig, axes = plt.subplots(2, 4, figsize=(16, 7.5))
-    for ax, col in zip(axes.flat, INPUT_COLUMNS):
-        ax.hist(clean[col], bins=45, density=True, alpha=0.40, label="All designs")
-        ax.hist(best[col], bins=45, density=True, alpha=0.65, label="Best 1%")
-        ax.set_title(col)
-        ax.set_xlabel("Coefficient value")
-        ax.set_ylabel("Density")
-    axes.flat[0].legend()
-    fig.suptitle(f"Coefficient distributions: best 1% KE designs (KE <= {threshold:.4f})")
-    fig.tight_layout()
-    fig.savefig(out_dir / "09_best_1pct_parameter_profiles.png", dpi=200)
-    plt.close(fig)
-
-    # Comparison against the linear baseline: KE < 1 is improvement.
-    fig, ax = plt.subplots(figsize=(8, 5))
-    labels = ["KE < 0.03", "0.03 <= KE < 0.1", "0.1 <= KE < 1", "KE >= 1"]
-    counts = [int((clean["KE_ratio"] < .03).sum()),
-              int(((clean["KE_ratio"] >= .03) & (clean["KE_ratio"] < .1)).sum()),
-              int(((clean["KE_ratio"] >= .1) & (clean["KE_ratio"] < 1)).sum()),
-              int((clean["KE_ratio"] >= 1).sum())]
-    bars = ax.bar(labels, np.asarray(counts) / n * 100)
-    ax.bar_label(bars, fmt="%.1f%%", padding=3)
-    ax.set_ylabel("Percentage of designs (%)")
-    ax.set_ylim(0, max(1, max(np.asarray(counts) / n * 100) * 1.18))
-    ax.set_title("Design performance groups relative to linear baseline")
-    fig.tight_layout()
-    fig.savefig(out_dir / "10_performance_categories.png", dpi=200)
-    plt.close(fig)
-
-    # Export the top candidate designs to help subsequent inverse-design analysis.
-    clean.nsmallest(100, "KE_ratio").to_csv(out_dir / "top_100_low_KE_designs.csv", index=False)
-    summary = [f"Dataset: {csv_path.name}", f"Total designs: {len(df):,}",
-               f"Valid designs: {n:,}", f"Admissible designs: {int(admissible.sum()):,}",
-               f"Median KE ratio: {clean['KE_ratio'].median():.6f}",
-               f"Mean KE ratio: {clean['KE_ratio'].mean():.6f}",
-               f"Minimum KE ratio: {clean['KE_ratio'].min():.6f}",
-               f"Best 1% cutoff: {threshold:.6f}",
-               f"KE < 0.03: {counts[0]:,}",
-               f"KE < 0.1: {counts[0]+counts[1]:,}",
-               f"KE < 1: {counts[0]+counts[1]+counts[2]:,}",
-               f"Visualization scatter points: {n:,} (all valid designs; no sampling)",
-               "Scatter plots are observational, not controlled sensitivity analyses."]
-    (out_dir / "dataset_summary.txt").write_text("\n".join(summary) + "\n")
-    print(f"Saved visualizations and summary in: {out_dir}")
-    print("OAT requires controlled DEM simulations with seven fixed coefficients.")
-    n_saved = 8
-
-    if include_oat and _plot_oat(out_dir):
-        n_saved += 1
-
-    print(f"Saved {n_saved} exploratory figures in: {out_dir}")
-    return out_dir
+fig.suptitle(f"Preliminary dataset visualization (n={n:,})", y=0.98)
+fig.tight_layout()
+fig.savefig(out_dir / "00_preliminary_dataset_overview.png", dpi=250, bbox_inches="tight")
+plt.close(fig)
 
 
-def _plot_oat(out_dir):
-    """Figure 06 from the OAT sweep CSVs in data/oat/. Returns True if it was saved."""
-    # One-at-a-Time (OAT) Sensitivity Analysis
-    # Requires separate controlled DEM simulations.
-    # Each OAT CSV must vary only one coefficient while holding the other 7 fixed.
+# One-at-a-Time (OAT) Sensitivity Analysis
+# Requires separate controlled DEM simulations.
+# Each OAT CSV must vary only one coefficient while holding the other 7 fixed.
 
 oat_dir = ROOT / "data" / "oat"
 oat_plots = 0
