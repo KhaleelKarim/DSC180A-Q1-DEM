@@ -1,0 +1,13 @@
+Dataset: python_seed84.csv
+Total designs: 360,000
+Valid designs: 360,000
+Admissible designs: 360,000
+Median KE ratio: 0.512786
+Mean KE ratio: 0.632042
+Minimum KE ratio: 0.010426
+Best 1% cutoff: 0.039700
+KE < 0.03: 1,309
+KE < 0.1: 35,319
+KE < 1: 278,496
+Visualization scatter points: 360,000 (all valid designs; no sampling)
+Scatter plots are observational, not controlled sensitivity analyses.
