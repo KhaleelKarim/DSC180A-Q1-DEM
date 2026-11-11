@@ -10,7 +10,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT/'data'/'oat'
-OUT = ROOT/'results'/'visualizations'/'python_seed35'
+OUT = ROOT/'results'/'visualizations'/'python_seed84'
 NAMES = ['c2_A','c2_B','c2_C','c2_D','c3_A','c3_B','c3_C','c3_D']
 PLOTS = [('representative','07_oat_representative_design.png','Representative design'),
          ('best_ke','08_oat_best_ke_design.png','Lowest-KE sampled design')]

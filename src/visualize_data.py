@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_CSV = ROOT / "data" / "raw" / "LHS_1000_samples_complete.csv"
+DEFAULT_CSV = ROOT / "data" / "raw" / "python_seed84.csv"
 INPUT_COLUMNS = [f"c2_{f}" for f in "ABCD"] + [f"c3_{f}" for f in "ABCD"]
 REQUIRED_COLUMNS = INPUT_COLUMNS + ["KE_ratio"]
 
@@ -43,6 +43,12 @@ out_dir = ROOT / "results" / "visualizations" / csv_path.stem
 out_dir.mkdir(parents=True, exist_ok=True)
 n = len(clean)
 logke = np.log10(clean["KE_ratio"].to_numpy())
+# Use every row for descriptive statistics. Large scatter plots are sampled
+# deterministically to keep PNG sizes reasonable for 360,000 designs.
+scatter_n = n
+plot_df = clean
+plot_logke = logke
+plot_logke = np.log10(plot_df["KE_ratio"].to_numpy())
 
 # Bounds are per family, not just global min/max.
 in_range = np.ones(n, dtype=bool)
@@ -78,7 +84,7 @@ plt.close(fig)
 fig, axes = plt.subplots(2, 4, figsize=(17, 8), sharey=True)
 
 for ax, col in zip(axes.flat, INPUT_COLUMNS):
-    ax.scatter(clean[col], clean["KE_ratio"], s=9, alpha=0.35, rasterized=True)
+    ax.scatter(plot_df[col], plot_df["KE_ratio"], s=4, alpha=0.16, rasterized=True)
     ax.set_yscale("log")
     ax.axhline(1, linewidth=0.8, linestyle="--")
     ax.set_xlabel(col)
@@ -89,7 +95,7 @@ for ax in axes[:, 0]:
 
 fig.suptitle(
     f"Parameter vs. KE Ratio scatter plots (n={n:,})\n"
-    "Observational: other seven coefficients also vary",
+    f"All {n:,} valid designs; other seven coefficients vary",
     y=1.02
 )
 fig.tight_layout()
@@ -145,12 +151,12 @@ x = np.linspace(-120, 0, 400)
 for ax, family in zip(axes.flat, "ABCD"):
 
     sc = ax.scatter(
-        clean[f"c2_{family}"],
-        clean[f"c3_{family}"],
-        c=logke,
+        plot_df[f"c2_{family}"],
+        plot_df[f"c3_{family}"],
+        c=plot_logke,
         cmap="viridis",
-        s=12,
-        alpha=0.65,
+        s=4,
+        alpha=0.22,
         rasterized=True
     )
 
@@ -174,7 +180,7 @@ cbar_ax = fig.add_axes([0.84, 0.23, 0.025, 0.52])
 cbar = fig.colorbar(sc, cax=cbar_ax)
 cbar.set_label("log10(KE ratio)")
 fig.suptitle(
-    "Sampled coefficient space vs positive-strain-energy boundary",
+    f"Coefficient space (all {n:,} valid designs) vs energy boundary",
     fontsize=15,
     y=0.97
 )
@@ -284,5 +290,51 @@ if oat_dir.exists():
 else:
     print("OAT datasets not available yet. Skipping OAT sensitivity analysis.")
 
-print(f"Saved 6 exploratory figures in: {out_dir}")
+# Most promising designs: top 1% by KE (full dataset).
+threshold = clean["KE_ratio"].quantile(0.01)
+best = clean.loc[clean["KE_ratio"] <= threshold]
+fig, axes = plt.subplots(2, 4, figsize=(16, 7.5))
+for ax, col in zip(axes.flat, INPUT_COLUMNS):
+    ax.hist(clean[col], bins=45, density=True, alpha=0.40, label="All designs")
+    ax.hist(best[col], bins=45, density=True, alpha=0.65, label="Best 1%")
+    ax.set_title(col)
+    ax.set_xlabel("Coefficient value")
+    ax.set_ylabel("Density")
+axes.flat[0].legend()
+fig.suptitle(f"Coefficient distributions: best 1% KE designs (KE <= {threshold:.4f})")
+fig.tight_layout()
+fig.savefig(out_dir / "09_best_1pct_parameter_profiles.png", dpi=200)
+plt.close(fig)
+
+# Comparison against the linear baseline: KE < 1 is improvement.
+fig, ax = plt.subplots(figsize=(8, 5))
+labels = ["KE < 0.03", "0.03 <= KE < 0.1", "0.1 <= KE < 1", "KE >= 1"]
+counts = [int((clean["KE_ratio"] < .03).sum()),
+          int(((clean["KE_ratio"] >= .03) & (clean["KE_ratio"] < .1)).sum()),
+          int(((clean["KE_ratio"] >= .1) & (clean["KE_ratio"] < 1)).sum()),
+          int((clean["KE_ratio"] >= 1).sum())]
+bars = ax.bar(labels, np.asarray(counts) / n * 100)
+ax.bar_label(bars, fmt="%.1f%%", padding=3)
+ax.set_ylabel("Percentage of designs (%)")
+ax.set_ylim(0, max(np.asarray(counts) / n * 100) * 1.18)
+ax.set_title("Design performance groups relative to linear baseline")
+fig.tight_layout()
+fig.savefig(out_dir / "10_performance_categories.png", dpi=200)
+plt.close(fig)
+
+# Export the top candidate designs to help subsequent inverse-design analysis.
+clean.nsmallest(100, "KE_ratio").to_csv(out_dir / "top_100_low_KE_designs.csv", index=False)
+summary = [f"Dataset: {csv_path.name}", f"Total designs: {len(df):,}",
+           f"Valid designs: {n:,}", f"Admissible designs: {int(admissible.sum()):,}",
+           f"Median KE ratio: {clean['KE_ratio'].median():.6f}",
+           f"Mean KE ratio: {clean['KE_ratio'].mean():.6f}",
+           f"Minimum KE ratio: {clean['KE_ratio'].min():.6f}",
+           f"Best 1% cutoff: {threshold:.6f}",
+           f"KE < 0.03: {counts[0]:,}",
+           f"KE < 0.1: {counts[0]+counts[1]:,}",
+           f"KE < 1: {counts[0]+counts[1]+counts[2]:,}",
+           f"Visualization scatter points: {scatter_n:,} (all valid designs; no sampling)",
+           "Scatter plots are observational, not controlled sensitivity analyses."]
+(out_dir / "dataset_summary.txt").write_text("\n".join(summary) + "\n")
+print(f"Saved visualizations and summary in: {out_dir}")
 print("OAT requires controlled DEM simulations with seven fixed coefficients.")
