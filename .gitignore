@@ -22,3 +22,6 @@ Thumbs.db
 
 # Data
 data/raw/*
+
+# Trained models (large binaries)
+models/*
