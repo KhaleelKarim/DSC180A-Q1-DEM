@@ -2,20 +2,20 @@
 Helpers for feature engineering and model evaluation
 """
 
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
 
 def evalute_model(model, dataset):
     """
     model: Trained Scikit-Learn model, anything that support a .predict() method
     dataset: Pandas Dataframe which has 8 columns for the coefficients and another
              column for the cateogry and another for the ke_ratio
-    return: {"overall": {"mse": mse, "r2": r2}, "hetero": {"mse": mse, "r2": r2}, "hetero_excl_bist": {"mse": mse, "r2": r2}}
+    return: {"overall": {"mse": mse, "r2": r2, "mape": mape}, "hetero": {"mse": mse, "r2": r2, "mape": mape}, "hetero_excl_bist": {"mse": mse, "r2": r2, "mape": mape}}
     """
 
     # Initialize lists to hold metrics
-    overall_metrics = {"mse": 0, "r2": 0}
-    hetero_metrics = {"mse": 0, "r2": 0}
-    hetero_excl_bist_metrics = {"mse": 0, "r2": 0}
+    overall_metrics = {"mse": 0, "r2": 0, "mape": 0}
+    hetero_metrics = {"mse": 0, "r2": 0, "mape": 0}
+    hetero_excl_bist_metrics = {"mse": 0, "r2": 0, "mape": 0}
 
     # Calculate metrics on entire dataset
     X_test = dataset[["c2_A", "c2_B", "c2_C", "c2_D",
@@ -24,6 +24,7 @@ def evalute_model(model, dataset):
     y_pred = model.predict(X_test)
     overall_metrics["mse"] = mean_squared_error(y_test, y_pred)
     overall_metrics["r2"] = r2_score(y_test, y_pred)
+    overall_metrics["mape"] = mean_absolute_percentage_error(y_test, y_pred)
 
     # Calculate metrics on dataset for only hetero
     X_test = dataset[dataset["Category"] == "het"][["c2_A", "c2_B", "c2_C", "c2_D",
@@ -32,6 +33,7 @@ def evalute_model(model, dataset):
     y_pred = model.predict(X_test)
     hetero_metrics["mse"] = mean_squared_error(y_test, y_pred)
     hetero_metrics["r2"] = r2_score(y_test, y_pred)
+    hetero_metrics["mape"] = mean_absolute_percentage_error(y_test, y_pred)
 
     # Calculate metrics on dataset for only hetero_excl_bist
     X_test = dataset[dataset["Category"] == "het_excl_bist"][["c2_A", "c2_B", "c2_C", "c2_D",
@@ -40,6 +42,7 @@ def evalute_model(model, dataset):
     y_pred = model.predict(X_test)
     hetero_excl_bist_metrics["mse"] = mean_squared_error(y_test, y_pred)
     hetero_excl_bist_metrics["r2"] = r2_score(y_test, y_pred)
+    hetero_excl_bist_metrics["mape"] = mean_absolute_percentage_error(y_test, y_pred)
 
     return {"overall": overall_metrics, "hetero": hetero_metrics, "hetero_excl_bist": hetero_excl_bist_metrics}
 
@@ -47,9 +50,9 @@ def evalute_model(model, dataset):
 def display_eval(model_eval_dict):
     """
     model_eval_dict: The output of evalute_model, a dict of the form
-                     {"overall": {"mse": mse, "r2": r2}, 
-                      "hetero": {"mse": mse, "r2": r2}, 
-                      "hetero_excl_bist": {"mse": mse, "r2": r2}}
+                     {"overall": {"mse": mse, "r2": r2, "mape": mape}, 
+                      "hetero": {"mse": mse, "r2": r2, "mape": mape}, 
+                      "hetero_excl_bist": {"mse": mse, "r2": r2, "mape": mape}}
     return: Nothing, just prints out the evalution metrics
     """
     
@@ -57,18 +60,21 @@ def display_eval(model_eval_dict):
     print("Model Evaluation over all Data")
     print(f"MSE: {model_eval_dict['overall']['mse']}")
     print(f"R2:  {model_eval_dict['overall']['r2']}")
+    print(f"MAPE: {model_eval_dict['overall']['mape']}")
     print("======================================================\n\n")
 
     print("======================================================")
     print("Model Evaluation over all Heterogeneous Rows")
     print(f"MSE: {model_eval_dict['hetero']['mse']}")
     print(f"R2:  {model_eval_dict['hetero']['r2']}")
+    print(f"MAPE: {model_eval_dict['hetero']['mape']}")
     print("======================================================\n\n")
 
     print("======================================================")
     print("Model Evaluation over all Heterogeneous Rows Excluding Bistability")
     print(f"MSE: {model_eval_dict['hetero_excl_bist']['mse']}")
     print(f"R2:  {model_eval_dict['hetero_excl_bist']['r2']}")
+    print(f"MAPE: {model_eval_dict['hetero_excl_bist']['mape']}")
     print("======================================================\n\n")
     
 
